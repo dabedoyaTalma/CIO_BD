@@ -21,6 +21,7 @@ GO
 --	2022-11-11	Sebastián Jaramillo: Se incluye RN para el cliente Aerolineas Argentinas
 --	2023-02-13	Sebastián Jaramillo: Se configura nuevo contrato de Avianca 2023 "TAKE OFF 20230201" y Regional Express se integra como un "facturar a" más de Avianca
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 -- ==========================================================================================================================================================================
 
 --SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesDrainageOrDrinkingWater] (1533469,45,2,1,1,17,16,'2021-09-10')
@@ -55,6 +56,17 @@ BEGIN
 			DS.EncabezadoServicioId = @ServiceHeaderId
 
 	IF (SELECT SUM(cantidad) FROM @ServiceDetail) = 0 RETURN
+
+		--SPIRIT / SAI
+	IF (@CompanyId=195 AND @BillingToCompany=87)
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			INSERT @Result SELECT * FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 1)
+
+			RETURN
+		END
+	END
 
 	--AEROLINEAS ARGENTINAS / AEROLINEAS ARGENTINAS
 	IF (@CompanyId=67 AND @BillingToCompany=67)
