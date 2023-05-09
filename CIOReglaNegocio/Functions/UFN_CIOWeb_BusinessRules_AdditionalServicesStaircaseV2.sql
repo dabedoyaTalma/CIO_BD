@@ -18,6 +18,7 @@ GO
 --	2023-02-13	Sebastián Jaramillo: Se configura nuevo contrato de Avianca 2023 "TAKE OFF 20230201" y Regional Express se integra como un "facturar a" más de Avianca
 --	2023-03-30	Sebastián Jaramillo: Adición de RN RCH LATAM
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 -- ========================================================================================================================================================================
 
 --SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2](33442,3,1,1,23,'2019-08-12')
@@ -75,6 +76,25 @@ BEGIN
 
 			IF (@@ROWCOUNT > 0)
 				SET	@SeUsoEscaleraTrasera = 1
+
+	IF (@CompanyId=195 AND @BillingToCompany=87) --SPIRIT / SAI
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+					INSERT	@T_TMP_DETALLE_SRV
+				SELECT	ROW_NUMBER() OVER(ORDER BY fila) fila, Servicio, HoraInicio, HoraFinal, TiempoTotal, cantidad
+				FROM	(	SELECT	* 
+							FROM	@T_TMP_DETALLE_SRV_ESC_DELAN 
+							UNION	ALL
+							SELECT	* 
+							FROM	@T_TMP_DETALLE_SRV_ESC_TRAS
+						) AS R
+
+				INSERT @T_Result SELECT StartTime, FinalTime, NULL, IsAdditionalService, StartTime, FinalTime, NULL, AdditionalAmount, AdditionalService, NULL, NULL FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@T_TMP_DETALLE_SRV, 0) WHERE AdditionalAmount > 0
+
+			RETURN
+		END
+	END
 
 	IF (@CompanyId = 67 AND @BillingToCompany = 67) --AEROLINEAS ARGENTINAS / AEROLINEAS ARGENTINAS	
 	BEGIN
