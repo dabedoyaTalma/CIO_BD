@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir]    Script Date: 09/05/2023 20:00:13 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir]    Script Date: 10/05/2023 15:17:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -67,12 +67,13 @@ BEGIN
 	
 	IF (@CompanyId=195 AND @BillingToCompanyId=87) --SPIRIT / SAI
 	BEGIN
-		IF (@AirportId IN (3,4,17))
+		IF (@AirportId IN (3,4,17)) --MDE, CLO, CTG
 		BEGIN
-			INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 60, 30.0,NULL,NULL) --TIENEN 1 HORA DE AIRE EN MDE, CLO, CTG
+			INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 30.0,NULL,NULL) 
 			RETURN
 		END
-		ELSE IF (@AirportId IN (9,10,11))
+		ELSE
+		IF (@AirportId IN (9,10,11))
 		BEGIN
 			RETURN
 		END
