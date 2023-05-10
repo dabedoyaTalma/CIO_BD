@@ -43,6 +43,21 @@ BEGIN
 	DECLARE @TransitServiceTime INT = DATEDIFF(MINUTE, @ATA, @ATD)
 	DECLARE @ServiceTime INT = (SELECT SUM(TiempoTotal) FROM @ServiceDetail)
 
+		--SPIRIT / SAI
+	IF (@CompanyId=195 AND @BillingToCompany=87)
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			IF (@AirportId IN (3,4,17,9)) --MDE, CLO, CTG, AXM
+			BEGIN
+				INSERT @Result SELECT * FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 0)
+				RETURN
+			END
+			
+			INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 30.0,NULL,NULL) 
+			RETURN
+		END
+	END
 	---- ==========================================
 	---- SARPA A SARPA
 	---- ==========================================
