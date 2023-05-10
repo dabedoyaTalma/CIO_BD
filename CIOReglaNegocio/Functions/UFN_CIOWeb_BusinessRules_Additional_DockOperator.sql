@@ -8,8 +8,8 @@ GO
 -- Create date: 2019-10-15
 -- Description:	Function for Businees Rules "add dock operator"
 -- Change History:
---   2019-10-15 Juan Camilo Zuluaga: Function created
-
+--  2019-10-15 Juan Camilo Zuluaga: Function created
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 -- SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_DockOperator] (12254, 3, 9, '2019-07-26')
 -- =============================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_DockOperator](
@@ -38,6 +38,15 @@ BEGIN
 
 
 	IF (SELECT SUM(cantidad) FROM @T_TMP_DETALLE_SRV) = 0 RETURN
+
+	IF (@CompanyId=195)
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			INSERT @T_Result SELECT * FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@T_TMP_DETALLE_SRV, 0)
+			RETURN
+		END
+	END
 			
 	IF(@CompanyId IN (9, 56)) --COPA     
 	BEGIN
