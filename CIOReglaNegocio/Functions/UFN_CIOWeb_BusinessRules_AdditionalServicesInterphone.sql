@@ -6,6 +6,8 @@ GO
 --	2021-11-01	Sebastián Jaramillo: Se incluye RN LATAM Contrato Nuevo EYP
 --	2021-12-06	Sebastián Jaramillo: Nueva RN American Airlines	
 --	2022-01-31	Sebastián Jaramillo: Nueva RN Ultra Air
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
+
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesInterphone](
 	@ServiceHeaderId BIGINT,
 	@ServiceTypeId INT,
@@ -40,6 +42,16 @@ BEGIN
 			DS.EncabezadoServicioId = @ServiceHeaderId 
 
 	IF (SELECT SUM(Cantidad) FROM @ServiceDetail) = 0  RETURN 
+
+	--SPIRIT / SAI
+	IF (@CompanyId=195 AND @BillingToCompany=87)
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			INSERT @Result SELECT * FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 0)
+			RETURN
+		END
+	END
 
 	--ULTRA AIR / ULTRA AIR
 	IF (@CompanyId=259 AND @BillingToCompany=259)
