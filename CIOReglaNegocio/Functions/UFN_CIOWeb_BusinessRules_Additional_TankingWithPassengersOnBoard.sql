@@ -15,6 +15,7 @@ GO
 --	2022-11-11	Sebastián Jaramillo: Se incluye RN para el cliente Aerolineas Argentinas
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
 --	2023-04-30	Sebastián Jaramillo: Se retira cobro de tanqueo con PAX a bordo, confirmado con Claudia por cambio en figura operacional con personal de LIMPIEZA
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 -- ==============================================================================================================================================================================
 
 -- SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TankingWithPassengersOnBoard] (1228297,1,304,1,1,0)	
@@ -67,6 +68,13 @@ BEGIN
 	--		RETURN
 	--	END
 	--END
+		
+	IF (@CompanyId=195 AND @BillingToCompany=87) --SPIRIT / SAI
+	BEGIN
+		INSERT @T_Result
+		SELECT StartTime, FinalTime, AdditionalAmount, AdditionalService FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 0) WHERE IsAdditionalService = 1
+		RETURN
+	END
 
 	IF (@CompanyId = 67 AND @BillingToCompany = 67) --AEROLINEAS ARGENTINAS / AEROLINEAS ARGENTINAS
 	BEGIN
