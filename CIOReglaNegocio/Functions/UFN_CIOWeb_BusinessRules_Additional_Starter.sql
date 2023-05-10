@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_Starter]    Script Date: 09/05/2023 15:02:53 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_Starter]    Script Date: 09/05/2023 23:36:37 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

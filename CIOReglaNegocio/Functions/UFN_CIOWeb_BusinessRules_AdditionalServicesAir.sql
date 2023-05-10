@@ -24,6 +24,7 @@ GO
 --	2023-02-13	Sebastián Jaramillo: Se configura nuevo contrato de Avianca 2023 "TAKE OFF 20230201" y Regional Express se integra como un "facturar a" más de Avianca
 --	2023-03-30	Sebastián Jaramillo: Se configura RN LATAM RCH
 --	2023-04-21	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 -- ============================================================================================================================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir](--[CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime]
 	@ServiceHeaderId BIGINT,
@@ -64,6 +65,19 @@ BEGIN
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 AND @CompanyId <> 44 RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO CON LAN NO SE PUEDE POR EL CALCULO DEL Time DENDIENTE EN EL CASO DE LAS PERNOCTAS
 	
+	IF (@CompanyId=195 AND @BillingToCompanyId=87) --SPIRIT / SAI
+	BEGIN
+		IF (@AirportId IN (3,4,17))
+		BEGIN
+			INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 60, 30.0,NULL,NULL) --TIENEN 1 HORA DE AIRE EN MDE, CLO, CTG
+			RETURN
+		END
+		ELSE IF (@AirportId IN (9,10,11))
+		BEGIN
+			RETURN
+		END
+	END
+
 	IF (@CompanyId=272 AND @BillingToCompanyId=272) --ARAJET / ARAJET
 	BEGIN
 		IF (@DateService >= '2022-09-15')
