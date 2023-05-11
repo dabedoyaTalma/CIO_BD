@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CertifiedOfficeService]    Script Date: 10/05/2023 9:54:45 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CertifiedOfficeService]    Script Date: 11/05/2023 13:49:56 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -61,7 +61,7 @@ BEGIN
 				,	NULL
 				,	NULL
 				,	NULL
-				,	0
+				,	CQ.AdditionalAmount
 				,	CQ.AdditionalService
 				,	NULL
 				,	NULL
