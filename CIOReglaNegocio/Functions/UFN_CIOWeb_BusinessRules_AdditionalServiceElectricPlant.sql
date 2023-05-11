@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServiceElectricPlant]    Script Date: 10/05/2023 14:45:00 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServiceElectricPlant]    Script Date: 11/05/2023 16:00:38 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -34,6 +34,8 @@ GO
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
 --	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 --	2023-05-10	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: AMERICAN AIRLINES - Facturar a: AMERICAN AIRLINES
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI JETAIR  Compañía: JETAIR - Facturar a: SAI
 
 -- =========================================================================================================================================================================
 --SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServiceElectricPlant] (20565,11,13,'E190','115VAC',9,9,null,48,'2019-09-01')
@@ -103,6 +105,30 @@ BEGIN
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 AND @CompanyId NOT IN (9, 72) RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO CON COPA / WINGO NO SE PUEDE POR EL CALCULO DEL TIEMPO DENDIENTE EN EL CASO DE LAS PERNOCTAS
 
+	------------------------------------------------------------------------------------------------------------
+	--**********************************************************************************************************
+	------------------------------------------------------------------------------------------------------------
+	--JETAIR / SAI
+	IF (@CompanyId=295 AND @BillingToCompany=87) 
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			INSERT @T_Result SELECT StartDate, EndDate, Time, AdditionalService, AdditionalStartTime, AdditionalEndTime, AdditionalTime, AdditionalQuanty, AdditionalServiceName, FractionName, TimeLeftover, NULL CostCenter FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 60, 30.0, NULL,NULL)
+			RETURN
+		END
+	END
+	------------------------------------------------------------------------------------------------------------
+	--**********************************************************************************************************
+	------------------------------------------------------------------------------------------------------------
+	--AEROMÉXICO / SAI
+	IF (@CompanyId=58 AND @BillingToCompany=87) --AEROMÉXICO / SAI
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			INSERT @T_Result SELECT StartDate, EndDate, Time, AdditionalService, AdditionalStartTime, AdditionalEndTime, AdditionalTime, AdditionalQuanty, AdditionalServiceName, FractionName, TimeLeftover, NULL CostCenter FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 120, 60.0, NULL,NULL)
+			RETURN
+		END
+	END
 	------------------------------------------------------------------------------------------------------------
 	--**********************************************************************************************************
 	------------------------------------------------------------------------------------------------------------
