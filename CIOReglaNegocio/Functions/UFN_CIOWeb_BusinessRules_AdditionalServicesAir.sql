@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir]    Script Date: 11/05/2023 13:34:22 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir]    Script Date: 11/05/2023 15:40:04 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -26,6 +26,8 @@ GO
 --	2023-04-21	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
 --	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI JETAIR  Compañía: JETAIR - Facturar a: SAI
 -- ============================================================================================================================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir](--[CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime]
 	@ServiceHeaderId BIGINT,
@@ -66,6 +68,18 @@ BEGIN
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 AND @CompanyId <> 44 RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO CON LAN NO SE PUEDE POR EL CALCULO DEL Time DENDIENTE EN EL CASO DE LAS PERNOCTAS
 	
+	IF (@CompanyId=295 AND @BillingToCompanyId=87) --JETAIR / SAI
+	BEGIN
+		INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 60.0,NULL,NULL) 
+		RETURN
+	END
+
+	IF (@CompanyId=58 AND @BillingToCompanyId=87) --AEROMÉXICO / SAI
+	BEGIN
+		INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 60.0,NULL,NULL) 
+		RETURN
+	END
+
 		-- AMERICAN AIRLINES / SAI
 	IF (@CompanyId=43 AND @BillingToCompanyId=87)
 	BEGIN

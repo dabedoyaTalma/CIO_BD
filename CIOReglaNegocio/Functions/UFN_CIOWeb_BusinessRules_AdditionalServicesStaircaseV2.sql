@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2]    Script Date: 09/05/2023 14:24:57 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2]    Script Date: 11/05/2023 14:27:37 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -19,6 +19,8 @@ GO
 --	2023-03-30	Sebastián Jaramillo: Adición de RN RCH LATAM
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
 --	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
+
 -- ========================================================================================================================================================================
 
 --SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2](33442,3,1,1,23,'2019-08-12')
@@ -76,6 +78,47 @@ BEGIN
 
 			IF (@@ROWCOUNT > 0)
 				SET	@SeUsoEscaleraTrasera = 1
+
+		
+	IF (@CompanyId=43 AND @BillingToCompany=87) -- AMERICAN AIRLINES / SAI
+	BEGIN
+		IF (@AirportId IN (4)) --CLO
+		BEGIN
+			INSERT	@T_TMP_DETALLE_SRV
+			SELECT	ROW_NUMBER() OVER(ORDER BY HoraInicio) Fila, Servicio, HoraInicio, HoraFinal, TiempoTotal, Cantidad
+			FROM	(	SELECT	Fila, CONCAT(Servicio, ' DELANTERA') Servicio, HoraInicio, HoraFinal, TiempoTotal, Cantidad
+						FROM	@T_TMP_DETALLE_SRV_ESC_DELAN 
+						UNION	ALL
+						SELECT	Fila, CONCAT(Servicio, ' TRASERA') Servicio, HoraInicio, HoraFinal, TiempoTotal, Cantidad 
+						FROM	@T_TMP_DETALLE_SRV_ESC_TRAS
+					) AS R
+
+			IF(@SeUsoEscaleraDelantera = 1 AND @SeUsoEscaleraTrasera = 1)
+			BEGIN
+				IF EXISTS(SELECT TOP(1) Servicio FROM @T_TMP_DETALLE_SRV WHERE Fila = 1 AND Servicio LIKE '%DELANTERA') --Se valida si la escalera que se conectó primero fue la delantera
+				BEGIN
+					DELETE FROM @T_TMP_DETALLE_SRV WHERE Servicio LIKE '%DELANTERA' --Se descarta cobro de la escalera delantera que se conectó primero por ir 1 incluida
+
+					INSERT @T_Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@T_TMP_DETALLE_SRV, 0, 60.0,NULL,NULL)
+				END
+
+				IF EXISTS(SELECT TOP(1) Servicio FROM @T_TMP_DETALLE_SRV WHERE Fila = 1 AND Servicio LIKE '%TRASERA') --Se valida si la escalera que se conectó primero fue la trasera
+				BEGIN
+					DELETE FROM @T_TMP_DETALLE_SRV WHERE Servicio LIKE '%TRASERA' --Se descarta cobro de la escalera trasera que se conectó primero por ir 1 incluida
+
+					INSERT @T_Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@T_TMP_DETALLE_SRV, 0, 60.0,NULL,NULL)
+				END
+			END
+
+			RETURN
+		END
+
+		IF (@AirportId IN (17,68)) --CTG, PEI
+		BEGIN
+			INSERT @T_Result SELECT StartTime, FinalTime, NULL, IsAdditionalService, StartTime, FinalTime, NULL, AdditionalAmount, AdditionalService, NULL, NULL FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@T_TMP_DETALLE_SRV, 2) WHERE AdditionalAmount > 0
+			RETURN
+		END
+	END
 
 	IF (@CompanyId=195 AND @BillingToCompany=87) --SPIRIT / SAI
 	BEGIN
