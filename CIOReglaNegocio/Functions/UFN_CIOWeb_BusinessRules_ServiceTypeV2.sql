@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_ServiceTypeV2]    Script Date: 12/05/2023 10:58:02 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_ServiceTypeV2]    Script Date: 12/05/2023 13:43:57 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,6 +13,7 @@ GO
 --	2022-09-28	Sebastián Jaramillo: Se adicionan RN Arajet
 --	2023-02-13	Sebastián Jaramillo: Se configura nuevo contrato de Avianca 2023 "TAKE OFF 20230201" y Regional Express se integra como un "facturar a" más de Avianca
 --	2023-02-27	Sebastián Jaramillo: Se configura nueva logica en Avianca para identificar transitos ferry o de traslado
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 --
 -- ===================================================================================================================================================================================		
 --	SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CentralizedOfficeService](1333595, 1, 1, 1, 55, '2021-02-07', '2021-02-07 18:27', '2021-02-07 19:22')
@@ -135,6 +136,22 @@ BEGIN
 	-- =====================
 	IF (@ServiceType = 5)
 	BEGIN
+
+		IF (@CompanyId=195 AND @BillingToCompany=87) --SPIRIT / SAI                           
+		BEGIN
+			IF (@DateService >= '2023-05-09')
+			BEGIN
+				IF	(	SELECT  COUNT(DS.DetalleServicioId)
+						FROM	CIOServicios.DetalleServicio DS
+						WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+					INSERT @T_RESULTADO SELECT 1, 1, '100%', NULL, NULL
+				ELSE
+					INSERT @T_RESULTADO SELECT 1, 1, '50%', NULL, NULL
+			END
+
+			RETURN
+		END
+
 		IF (@CompanyId = 272 /*ARAJET*/ AND @BillingToCompany = 272 /*ARAJET*/)                            
 		BEGIN
 			IF (@DateService >= '2022-09-15')
@@ -246,6 +263,22 @@ BEGIN
 	-- ========================================
 	IF (@ServiceType = 6)
 	BEGIN
+
+		IF (@CompanyId=195 AND @BillingToCompany=87) --SPIRIT / SAI                                 
+		BEGIN
+			IF (@DateService >= '2023-05-09')
+			BEGIN
+				IF	(	SELECT  COUNT(DS.DetalleServicioId)
+						FROM	CIOServicios.DetalleServicio DS
+						WHERE	DS.TipoActividadId IN (7,8) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga)*/
+					INSERT @T_RESULTADO SELECT 1, 1, NULL, NULL, NULL
+				ELSE
+					INSERT @T_RESULTADO SELECT 0, 1, NULL, NULL, NULL
+			END
+
+			RETURN
+		END
+
 		IF (@CompanyId = 272 /*ARAJET*/ AND @BillingToCompany = 272 /*ARAJET*/)                        
 		BEGIN
 			IF (@DateService >= '2022-09-15')
