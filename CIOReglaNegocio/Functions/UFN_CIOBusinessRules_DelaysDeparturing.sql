@@ -55,27 +55,29 @@ BEGIN
 			BEGIN
 				INSERT	@T_RESULT 
 				SELECT	'DEMORA SALIENDO', '15%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
 			END
 
 			IF(@DelayDeparturingTotal BETWEEN 181 AND 240)
 			BEGIN
 				INSERT	@T_RESULT 
 				SELECT	'DEMORA SALIENDO', '30%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
 			END
 
 			IF(@DelayDeparturingTotal BETWEEN 241 AND 300)
 			BEGIN
 				INSERT	@T_RESULT 
 				SELECT	'DEMORA SALIENDO', '45%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
 			END
 
 			IF(@DelayDeparturingTotal > 301)
 			BEGIN
 				INSERT	@T_RESULT 
 				SELECT	'DEMORA SALIENDO', '50%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
 			END
-
-			RETURN
 		END
 
 		IF (@CompanyId = 43 AND @BillingToCompany = 43) --AMERICAN AIRLINES A AMERICAN AIRLINES
