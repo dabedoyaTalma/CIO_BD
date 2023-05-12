@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2]    Script Date: 11/05/2023 14:27:37 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2]    Script Date: 11/05/2023 16:37:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -20,6 +20,7 @@ GO
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
 --	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
 
 -- ========================================================================================================================================================================
 
@@ -79,6 +80,29 @@ BEGIN
 			IF (@@ROWCOUNT > 0)
 				SET	@SeUsoEscaleraTrasera = 1
 
+	IF (@CompanyId=58 AND @BillingToCompany=87) --AEROMÉXICO / SAI
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			IF ([CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_RemoteGateArrival](@ServiceHeaderId) = 1 --Si se recibe en remota
+				OR [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_RemoteGateDeparture](@ServiceHeaderId) = 1 )--o si sale en remota
+			BEGIN
+					--En remota incluye 2 escalaras
+					INSERT	@T_TMP_DETALLE_SRV
+					SELECT	ROW_NUMBER() OVER(ORDER BY fila) fila, Servicio, HoraInicio, HoraFinal, TiempoTotal, cantidad
+					FROM	(	SELECT	* 
+								FROM	@T_TMP_DETALLE_SRV_ESC_DELAN 
+								UNION	ALL
+								SELECT	* 
+								FROM	@T_TMP_DETALLE_SRV_ESC_TRAS
+							) AS R
+
+					INSERT @T_Result SELECT StartTime, FinalTime, NULL, IsAdditionalService, StartTime, FinalTime, NULL, AdditionalAmount, AdditionalService, NULL, NULL FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@T_TMP_DETALLE_SRV, 2) WHERE AdditionalAmount > 0
+					RETURN
+			END
+			
+		END
+	END
 		
 	IF (@CompanyId=43 AND @BillingToCompany=87) -- AMERICAN AIRLINES / SAI
 	BEGIN
