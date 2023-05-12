@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation]    Script Date: 12/05/2023 10:38:50 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation]    Script Date: 12/05/2023 10:36:31 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -26,6 +26,86 @@ ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation](
 RETURNS @T_RESULTADO TABLE(CollectServiceType BIT, ConsiderationPercentaje NVARCHAR(5), Consideration NVARCHAR(80))
 AS
 BEGIN
+
+	--JETAIR / SAI
+	IF (@CompanyId=295 AND @BillingToId=87) 
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-1440) --24 HORAS ANTES DEBEN AVISAR COMO MÁXIMO
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '100%', NULL
+				RETURN
+			END 
+			ELSE
+			BEGIN
+				INSERT @T_RESULTADO SELECT 0, NULL, NULL
+				RETURN
+			END
+		END
+	END
+
+	--AEROMÉXICO / SAI
+	IF (@CompanyId=58 AND @BillingToId=87) 
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			DECLARE @WeatherConditions BIT = [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_WeatherConditionsCancelation](@ServiceHeaderId)
+			
+			IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-600 AND @WeatherConditions = 1) --10 HORAS ANTES DEBEN AVISAR COMO MÁXIMO Y EVENTOS DE FUERZA MAYOR
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '30%', NULL
+				RETURN
+			END 
+			ELSE IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-600)
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '40%', NULL
+				RETURN
+			END 
+			ELSE
+			BEGIN
+				INSERT @T_RESULTADO SELECT 0, NULL, NULL
+				RETURN
+			END
+		END
+	END
+
+	-- AMERICAN AIRLINES / SAI
+	IF (@CompanyId=43 AND @BillingToId=87)
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-360) --6 HORAS ANTES DEBEN AVISAR COMO MÁXIMO
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '50%', NULL
+				RETURN
+			END
+			ELSE
+			BEGIN
+				INSERT @T_RESULTADO SELECT 0, NULL, NULL
+				RETURN
+			END
+		END
+	END
+
+	--SPIRIT / SAI
+	IF (@CompanyId=195 AND @BillingToId=87) 
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-720) --12 HORAS ANTES DEBEN AVISAR COMO MÁXIMO
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '50%', NULL
+				RETURN
+			END
+			ELSE
+			BEGIN
+				INSERT @T_RESULTADO SELECT 0, NULL, NULL
+				RETURN
+			END
+		END
+	END
+
 	--ARAJET / ARAJET
 	IF (@CompanyId = 272 AND @BillingToId = 272)
 	BEGIN
