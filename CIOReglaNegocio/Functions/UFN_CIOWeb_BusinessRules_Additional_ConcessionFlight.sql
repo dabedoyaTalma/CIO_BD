@@ -9,7 +9,12 @@ GO
 --	2019-10-11	Juan Camilo Zuluaga: Created function
 --	2022-07-28	Sebastián Jaramillo: Se ajusta RN VivaColombia para indicar explícitamente servicios internacionales
 --	2023-04-30	Sebastián Jaramillo: Se quita el cobro de concesión para la operación de AVA SAI BOGEXT facturada a traves de SAI
+--	2023-05-12	Diomer Bedoya	   : Se quita el cobro de concesión para la operación de AVA SAI SPIRIT facturada a traves de SAI
+--	2023-05-12	Diomer Bedoya	   : Se quita el cobro de concesión para la operación de AVA SAI AMERICAN AIRLINES facturada a traves de SAI
+--	2023-05-12	Diomer Bedoya	   : Se quita el cobro de concesión para la operación de AVA SAI AEROMÉXICO facturada a traves de SAI
+--	2023-05-12	Diomer Bedoya	   : Se quita el cobro de concesión para la operación de AVA SAI JETAIR facturada a traves de SAI
 -- ===============================================================================================================================================
+
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_ConcessionFlight](
 	@AirportId INT,
 	@ServiceTypeStageId  INT,
@@ -24,6 +29,30 @@ RETURNS @Result TABLE(ROW INT IDENTITY, AdditionalService BIT, AdditionalQuantit
 AS
 BEGIN
 	DECLARE	@ExtraText VARCHAR(50) = ''
+
+	IF (@CompanyId=295 AND @BillingToCompany = 87 AND @Date >= '2023-05-09') --JETAIR / SAI                   
+	BEGIN
+		INSERT @Result VALUES (0, 0, NULL)
+		RETURN
+	END
+
+	IF (@CompanyId=58 AND @BillingToCompany = 87 AND @Date >= '2023-05-09') --AEROMÉXICO / SAI                   
+	BEGIN
+		INSERT @Result VALUES (0, 0, NULL)
+		RETURN
+	END
+
+	IF (@CompanyId=43 AND @BillingToCompany = 87 AND @Date >= '2023-05-09') --AMERICAN AIRLINES / SAI                      
+	BEGIN
+		INSERT @Result VALUES (0, 0, NULL)
+		RETURN
+	END
+
+	IF (@CompanyId=195 AND @BillingToCompany = 87 AND @Date >= '2023-05-09') --SPIRIT / SAI                         
+	BEGIN
+		INSERT @Result VALUES (0, 0, NULL)
+		RETURN
+	END
 
 	IF (@AirportId = 47 AND @Date >= '2021-02-01') --PSO A PARTIR DEL PRIMERO DE FEBRERO NO MANEJA COBRO DE IVAR
 	BEGIN
