@@ -13,6 +13,9 @@ GO
 --	2021-06-30	Sebastián Jaramillo: Inclusión RN Nueva AXM LATAM
 --	2021-11-02	Sebastián Jaramillo: Inclusión RN Nueva EYP LATAM
 --	2021-12-16 	Sebastián Jaramillo: Inclusión RN Nueva American Airlines
+--	2023-05-12	Diomer Bedoya	   : Se quita el cobro de concesión para la operación de AVA SAI AMERICAN AIRLINES facturada a traves de SAI
+
+
 -- ========================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOBusinessRules_DelaysArriving](
 	@DelayArriving INT,
@@ -46,6 +49,38 @@ BEGIN
 
 	IF (@DelayArrivingTotal > 0) --VUELOS DEMORADOS LLEGANDO
 	BEGIN
+
+	IF (@CompanyId = 43 AND @BillingToCompany = 87) --AMERICAN AIRLINES / SAI xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+		BEGIN
+			
+				IF(@DelayArrivingTotal BETWEEN 121 AND 180)
+				BEGIN
+					INSERT	@T_RESULT 
+					SELECT	'DEMORA LLEGANDO', '15%', NULL, @DelayArriving, @TimeExcluded, @DelayArrivingTotal
+					RETURN
+				END
+
+				IF(@DelayArrivingTotal BETWEEN 181 AND 240)
+				BEGIN
+					INSERT	@T_RESULT 
+					SELECT	'DEMORA LLEGANDO', '30%', NULL, @DelayArriving, @TimeExcluded, @DelayArrivingTotal
+					RETURN
+				END
+
+				IF(@DelayArrivingTotal BETWEEN 241 AND 300)
+				BEGIN
+					INSERT	@T_RESULT 
+					SELECT	'DEMORA LLEGANDO', '45%', NULL, @DelayArriving, @TimeExcluded, @DelayArrivingTotal
+					RETURN
+				END
+
+				IF(@DelayArrivingTotal > 301)
+				BEGIN
+					INSERT	@T_RESULT 
+					SELECT	'DEMORA LLEGANDO', '50%', NULL, @DelayArriving, @TimeExcluded, @DelayArrivingTotal
+					RETURN
+				END
+		END
 
 		IF (@CompanyId = 43 AND @BillingToCompany = 43) --AMERICAN AIRLINES A AMERICAN AIRLINES
 		BEGIN
