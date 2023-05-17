@@ -144,10 +144,14 @@ BEGIN
 		BEGIN
 			IF (@DateService >= '2023-05-09')
 			BEGIN
-				IF	(	SELECT  COUNT(DS.DetalleServicioId)
+				IF	(SELECT  COUNT(DS.DetalleServicioId)
 						FROM	CIOServicios.DetalleServicio DS
-						WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+						WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  AND @AirportId = 3 /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo) MDE*/
 					INSERT @T_RESULTADO SELECT 1, 1, '75%', NULL, NULL
+				IF (SELECT  COUNT(DS.DetalleServicioId)
+						FROM	CIOServicios.DetalleServicio DS
+						WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1 /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+					INSERT @T_RESULTADO SELECT 1, 1, '100%', NULL, NULL
 				ELSE
 					INSERT @T_RESULTADO SELECT 1, 1, '50%', NULL, NULL
 			END
@@ -332,11 +336,11 @@ BEGIN
 				IF	(	SELECT  COUNT(DS.DetalleServicioId)
 						FROM	CIOServicios.DetalleServicio DS
 						WHERE	DS.TipoActividadId IN (7,8) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga)*/
-					INSERT @T_RESULTADO SELECT 1, 1, NULL, NULL, NULL
+					INSERT @T_RESULTADO SELECT 1, 1, '75%', NULL, NULL
 				ELSE
 					INSERT @T_RESULTADO SELECT 0, 1, NULL, NULL, NULL
 			END
-
+			--En caso de que se tengan más actividades registrarlo como un nuevo transito.
 			RETURN
 		END
 
