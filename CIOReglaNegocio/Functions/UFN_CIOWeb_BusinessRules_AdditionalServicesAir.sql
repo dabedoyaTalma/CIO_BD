@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir]    Script Date: 11/05/2023 15:40:04 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir]    Script Date: 18/05/2023 14:06:42 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -28,6 +28,10 @@ GO
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI JETAIR  Compañía: JETAIR - Facturar a: SAI
+--	2023-05-15	Sebastián Jaramillo: Se ajusta RN de Avianca para las estaciones LASA para entrar a generar facturación por simultaneidad en la otra función especial.
+--	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI LATAM  Compañía: LATAM - Facturar a: SAI
+--	2023-05-18	Diomer Bedoya	   : Se incluye RN TALMA-SAI KLM  Compañía: KLM - Facturar a: SAI
+--	2023-05-18	Diomer Bedoya	   : Se incluye RN TALMA-SAI AIR TRANSAT   Compañía: AIR TRANSAT  - Facturar a: SAI
 -- ============================================================================================================================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesAir](--[CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime]
 	@ServiceHeaderId BIGINT,
@@ -68,6 +72,18 @@ BEGIN
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 AND @CompanyId <> 44 RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO CON LAN NO SE PUEDE POR EL CALCULO DEL Time DENDIENTE EN EL CASO DE LAS PERNOCTAS
 	
+	IF (@CompanyId=130 AND @BillingToCompanyId=87) --AIR TRANSAT / SAI
+	BEGIN
+		INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 15.0,NULL,NULL) 
+		RETURN
+	END
+
+	IF (@CompanyId=59 AND @BillingToCompanyId=87) --KLM / SAI
+	BEGIN
+		INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 60.0,NULL,NULL) 
+		RETURN
+	END
+
 	IF (@CompanyId=295 AND @BillingToCompanyId=87) --JETAIR / SAI
 	BEGIN
 		INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 60.0,NULL,NULL) 
@@ -80,14 +96,13 @@ BEGIN
 		RETURN
 	END
 
-		-- AMERICAN AIRLINES / SAI
+	-- AMERICAN AIRLINES / SAI
 	IF (@CompanyId=43 AND @BillingToCompanyId=87)
 	BEGIN
 		IF (@AirportId IN (4)) --CLO
 		BEGIN
-			INSERT @Result 
-			SELECT 
-					CQ.StartTime
+			INSERT	@Result 
+			SELECT	CQ.StartTime
 				,	CQ.FinalTime
 				,	NULL
 				,	CQ.IsAdditionalService
@@ -98,13 +113,15 @@ BEGIN
 				,	CQ.AdditionalService
 				,	NULL
 				,	NULL
-				FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 1) CQ
+			FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 1) CQ
+
 			RETURN
 		END
-		ELSE
-		IF (@AirportId IN (17,68)) --CTG, PEI
+
+		IF (@AirportId IN (17,45)) --CTG, PEI
 		BEGIN
 			INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 60, 30.0,NULL,NULL) 
+			
 			RETURN
 		END
 	END
@@ -863,7 +880,30 @@ BEGIN
 		RETURN
 	END
 
-	IF (@DateService >= '2023-02-01') --MODELO DE AVIANCA NUEVO CONTRATO TAKE OFF 20230201
+	IF (@DateService >= '2023-04-01') --MODELO DE AVIANCA NUEVO CONTRATO TAKE OFF 20230201 (COBRO POR SIMULTANEIDAD A EXCEPCION DE LET)
+	BEGIN
+		IF	(	(@CompanyId=1 AND @BillingToCompanyId=1) --AVIANCA S.A / AVIANCA S.A
+			OR	(@CompanyId=1 AND @BillingToCompanyId=193) --AVIANCA S.A / REGIONAL EXPRESS
+			OR	(@CompanyId=42 AND @BillingToCompanyId=1) --TACA / AVIANCA S.A
+			OR	(@CompanyId=47 AND @BillingToCompanyId=1) --AEROGAL / AVIANCA S.A
+			--OR	(@CompanyId=58 AND @BillingToCompanyId=1) --AEROMÉXICO / AVIANCA S.A
+			--OR	(@CompanyId=43 AND @BillingToCompanyId=1) --AMERICAN AIRLINES / AVIANCA S.A
+			--OR	(@CompanyId=63 AND @BillingToCompanyId=1) --IBERIA / AVIANCA S.A
+			--OR	(@CompanyId=55 AND @BillingToCompanyId=1) --JETBLUE / AVIANCA S.A
+			--OR	(@CompanyId=38 AND @BillingToCompanyId=1) --TAME / AVIANCA S.A
+			)
+		BEGIN
+			IF (@AirportId = 34) --LET
+			BEGIN
+				INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 30.0, NULL,NULL) --EN LET SE COBRA DESDE EL PRIMER MINUTO CORREO "20210914 - CAMBIO REGLA DE NEGOCIO AIRE ACONDICIONADO LETICIA AVIANCA"
+				RETURN
+			END
+
+			RETURN --OJO! cobro especial por simultaneidad que se trata en la otra función --> CIOReglaNegocio.UFN_CIOWeb_BusinessRules_AdditionalServicesAirWithSimultaneousnessLevel
+		END
+	END
+
+	IF (@DateService BETWEEN '2023-02-01' AND '2023-03-31') --MODELO DE AVIANCA NUEVO CONTRATO TAKE OFF 20230201
 	BEGIN
 		IF	(	(@CompanyId=1 AND @BillingToCompanyId=1) --AVIANCA S.A / AVIANCA S.A
 			OR	(@CompanyId=1 AND @BillingToCompanyId=193) --AVIANCA S.A / REGIONAL EXPRESS
