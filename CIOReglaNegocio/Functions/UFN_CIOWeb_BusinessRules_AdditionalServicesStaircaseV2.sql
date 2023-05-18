@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2]    Script Date: 11/05/2023 16:37:35 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesStaircaseV2]    Script Date: 17/05/2023 9:33:15 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -137,7 +137,7 @@ BEGIN
 			RETURN
 		END
 
-		IF (@AirportId IN (17,68)) --CTG, PEI
+		IF (@AirportId IN (17,45)) --CTG, PEI
 		BEGIN
 			INSERT @T_Result SELECT StartTime, FinalTime, NULL, IsAdditionalService, StartTime, FinalTime, NULL, AdditionalAmount, AdditionalService, NULL, NULL FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@T_TMP_DETALLE_SRV, 2) WHERE AdditionalAmount > 0
 			RETURN

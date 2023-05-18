@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_Conveyor]    Script Date: 12/05/2023 15:03:43 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_Conveyor]    Script Date: 17/05/2023 8:38:33 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -9,7 +9,7 @@ GO
 -- Description:	Function for Businees Rules "add conveyor"
 -- Change History:
 --   2019-10-16 Juan Camilo Zuluaga: Function created
---   2019-12-12 Diomer Bedoya	   : En el tipo de actividad se tiene encuenta la actividad Primer conveyor
+--   2023-05-11 Diomer Bedoya	   :Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI en CTG
 -- =============================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_Conveyor](
 	@HeaderServiceId INT,
@@ -53,6 +53,12 @@ BEGIN
 			DS.EncabezadoServicioId = @HeaderServiceId
 	
 	IF (SELECT SUM(TiempoTotal) FROM @T_TMP_DETALLE_SRV) = 0 RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO
+
+	IF (@CompanyId=43 AND @BillingToCompany=87 AND @AirportId = 17)  -- AMERICAN AIRLINES / SAI CTG
+	BEGIN
+		INSERT @T_Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@T_TMP_DETALLE_SRV, 75, 75.0, NULL, NULL)
+		RETURN
+	END
 
 	IF (	@CompanyId = 39 
 		AND @BillingToCompany = 1 

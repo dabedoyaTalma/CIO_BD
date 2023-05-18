@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalConveyor2]    Script Date: 12/05/2023 15:06:25 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalConveyor2]    Script Date: 17/05/2023 8:37:15 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -14,6 +14,7 @@ GO
 --	2022-06-15	Sebastián Jaramillo: Se ajusta RN VivaAerobus para tener en cuenta cuando se cobre el tema de carga o descarga
 --	2022-07-28	Sebastián Jaramillo: Se ajusta RN VivaColombia para indicar explícitamente servicios internacionales
 --	2022-09-28	Sebastián Jaramillo: Se adicionan RN Arajet
+--  2023-05-12 Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI en CTG
 -- ======================================================================================================================================
 
 --SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalConveyor2](12251,4,1,1,20,12,'2019-08-30')
@@ -46,6 +47,12 @@ BEGIN
 			DS.EncabezadoServicioId = @ServiceHeaderId
 	
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO
+
+		IF (@CompanyId=43 AND @BillingToCompany=87 AND @AirportId = 17)  -- AMERICAN AIRLINES / SAI CTG
+	BEGIN
+		INSERT @Result SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 75, 75.0, NULL, NULL) 
+		RETURN
+	END
 
 	--AEROLINEAS ARGENTINAS / AEROLINEAS ARGENTINAS
 	IF (@CompanyId=67 AND @BillingToCompany=67)

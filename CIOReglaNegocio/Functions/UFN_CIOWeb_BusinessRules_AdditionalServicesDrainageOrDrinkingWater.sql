@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesDrainageOrDrinkingWater]    Script Date: 09/05/2023 13:01:54 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServicesDrainageOrDrinkingWater]    Script Date: 17/05/2023 8:44:03 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -57,7 +57,7 @@ BEGIN
 
 	IF (SELECT SUM(cantidad) FROM @ServiceDetail) = 0 RETURN
 
-		--SPIRIT / SAI
+	--SPIRIT / SAI
 	IF (@CompanyId=195 AND @BillingToCompany=87)
 	BEGIN
 		IF (@DateService >= '2023-05-09')
