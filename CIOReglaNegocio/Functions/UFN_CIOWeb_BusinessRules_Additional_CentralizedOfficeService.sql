@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CentralizedOfficeService]    Script Date: 19/05/2023 14:57:06 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CentralizedOfficeService]    Script Date: 23/05/2023 8:55:32 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -14,6 +14,7 @@ GO
 --	2023-02-13	Sebastián Jaramillo: Inclusión RN de cobros de "FM Mobile"
 --	2023-02-16	Sebastián Jaramillo: Ajustes RN inicios de fechas de cobros de "FM Mobile"
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI LATAM  Compañía: LATAM - Facturar a: SAI
 -- =============================================================================================================================================================================	
 --	SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CentralizedOfficeService](1333595, 1, 1, 1, 55, '2021-02-07', '2021-02-07 18:27', '2021-02-07 19:22')
 --
@@ -52,6 +53,14 @@ BEGIN
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 AND @CompanyId <> 44 RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO CON LAN NO SE PUEDE POR EL CALCULO DEL Time DENDIENTE EN EL CASO DE LAS PERNOCTAS
 	
+	-- ==========================================
+	-- LATAM / SAI
+	-- ==========================================
+	IF (@CompanyId = 44 AND @BillingToCompany = 87)
+	BEGIN
+		RETURN --SE INCLUYE EL DESPACHO CENTRALIZADO (NO SE COBRA ADICIONAL)
+	END
+
 	-- ==========================================
 	-- SARPA A SARPA
 	-- ==========================================
