@@ -9,6 +9,7 @@ GO
 --	2022-06-14  Sebastián Jaramillo: Funtion created
 --	2023-02-13	Sebastián Jaramillo: Se configura nuevo contrato de Avianca 2023 "TAKE OFF 20230201" y Regional Express se integra como un "facturar a" más de Avianca
 --	2023-04-20	Sebastián Jaramillo: Fusión TALMA-SAI BOGEX Incorporación RN AVA estaciones (BGA, MTR, PSO, IBE, NVA) Compañía: Avianca - Facturar a: SAI
+--	2023-05-23	Diomer Bedoya	   : Fusión TALMA-SAI AIR CENTURY Compañía: AIR CENTURY - Facturar a: SAI
 -- ============================================================================================================================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_BrakeCooling](
 	@ServiceHeaderId BIGINT,
@@ -38,6 +39,14 @@ BEGIN
 				DS.EncabezadoServicioId = @ServiceHeaderId
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 RETURN
+
+	--AIR CENTURY / SAI
+	IF (@CompanyId=296 AND @BillingToCompany=87)
+	BEGIN
+		INSERT @T_Result SELECT StartTime, FinalTime, NULL, IsAdditionalService, StartTime, FinalTime, NULL, AdditionalAmount, AdditionalService, NULL, NULL FROM [CIOServicios].[UFN_CIOWeb_CalculateQuantity](@ServiceDetail, 0) WHERE AdditionalAmount > 0
+		RETURN
+	END
+
 
 	 --AVIANCA / SAI
 	IF (@CompanyId = 1 AND @BillingToCompany = 87)
