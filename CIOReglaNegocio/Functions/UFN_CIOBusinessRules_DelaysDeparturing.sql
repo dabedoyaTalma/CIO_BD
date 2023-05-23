@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOBusinessRules_DelaysDeparturing]    Script Date: 12/05/2023 14:20:20 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOBusinessRules_DelaysDeparturing]    Script Date: 19/05/2023 13:23:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,7 +13,10 @@ GO
 --	2021-02-15	Sebastián Jaramillo: Inclusión RN Nueva AXM LATAM
 --	2021-11-02	Sebastián Jaramillo: Inclusión RN Nueva EYP LATAM
 --	2021-12-16 	Sebastián Jaramillo: Inclusión RN Nueva American Airlines
---	2023-05-12	Diomer Bedoya	   : Se quita el cobro de concesión para la operación de AVA SAI AMERICAN AIRLINES facturada a traves de SAI
+--	2023-05-12	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
+--	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI LATAM  Compañía: LATAM - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI AIR CENTURY  Compañía: AIR CENTURY - Facturar a: SAI
 
 -- ========================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOBusinessRules_DelaysDeparturing](
@@ -49,35 +52,106 @@ BEGIN
 	IF (@DelayDeparturingTotal > 0)
 	BEGIN
 
-		IF (@CompanyId = 43 AND @BillingToCompany = 87) --AMERICAN AIRLINES / SAI
+		IF (@CompanyId = 296 AND @BillingToCompany = 87) -- AIR CENTURY / SAI
 		BEGIN
+			
+			IF(@DelayDeparturingTotal BETWEEN 61 AND 120)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT	'DEMORA SALIENDO', '20%', NULL, @DelayDeparturingTotal, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
+			END
+
 			IF(@DelayDeparturingTotal BETWEEN 121 AND 180)
 			BEGIN
 				INSERT	@T_RESULT 
-				SELECT	'DEMORA SALIENDO', '15%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+				SELECT	'DEMORA SALIENDO', '30%', NULL, @DelayDeparturingTotal, @TimeExcluded, @DelayDeparturingTotal
 				RETURN
 			END
 
 			IF(@DelayDeparturingTotal BETWEEN 181 AND 240)
 			BEGIN
 				INSERT	@T_RESULT 
-				SELECT	'DEMORA SALIENDO', '30%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+				SELECT	'DEMORA SALIENDO', '50%', NULL, @DelayDeparturingTotal, @TimeExcluded, @DelayDeparturingTotal
 				RETURN
+			END
+
+			IF(@DelayDeparturingTotal > 241)
+			BEGIN
+				--INSERT	@T_RESULT 
+				--SELECT	'DEMORA LLEGANDO', '70%', NULL, @DelayArriving, @TimeExcluded, @DelayArrivingTotal
+				RETURN
+			END
+		END
+
+		IF (@CompanyId = 44 AND @BillingToCompany = 87) --LATAM / SAI
+		BEGIN
+			
+			IF(@DelayDeparturingTotal BETWEEN 61 AND 120)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT	'DEMORA SALIENDO', '25%', NULL, @DelayDeparturingTotal, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
+			END
+
+			IF(@DelayDeparturingTotal BETWEEN 121 AND 240)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT	'DEMORA SALIENDO', '40%', NULL, @DelayDeparturingTotal, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
+			END
+
+			IF(@DelayDeparturingTotal > 241)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT	'DEMORA SALIENDO', '70%', NULL, @DelayDeparturingTotal, @TimeExcluded, @DelayDeparturingTotal
+				RETURN
+			END
+		END
+
+		IF (@CompanyId=58 AND @BillingToCompany=87) --AEROMÉXICO / SAI      
+		BEGIN
+			IF (@DelayDeparturingTotal > 60)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT 'DEMORA SALIENDO'
+					,	CONCAT(CEILING((@DelayDeparturingTotal - 60) / 60.0), 'H')
+       				,	'60min/fracción por demora > 60 min'
+       				,	@DelayDeparturing
+       				,	@TimeExcluded
+       				,	@DelayDeparturingTotal
+			END
+
+			RETURN
+		END
+
+		IF (@CompanyId = 43 AND @BillingToCompany = 87) --AMERICAN AIRLINES / SAI
+		BEGIN
+			IF(@DelayDeparturingTotal BETWEEN 121 AND 180)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT	'DEMORA SALIENDO', '15%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
+			END
+
+			IF(@DelayDeparturingTotal BETWEEN 181 AND 240)
+			BEGIN
+				INSERT	@T_RESULT 
+				SELECT	'DEMORA SALIENDO', '30%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
 			END
 
 			IF(@DelayDeparturingTotal BETWEEN 241 AND 300)
 			BEGIN
 				INSERT	@T_RESULT 
 				SELECT	'DEMORA SALIENDO', '45%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
-				RETURN
 			END
 
 			IF(@DelayDeparturingTotal > 301)
 			BEGIN
 				INSERT	@T_RESULT 
 				SELECT	'DEMORA SALIENDO', '50%', NULL, @DelayDeparturing, @TimeExcluded, @DelayDeparturingTotal
-				RETURN
 			END
+
+			RETURN
 		END
 
 		IF (@CompanyId = 43 AND @BillingToCompany = 43) --AMERICAN AIRLINES A AMERICAN AIRLINES

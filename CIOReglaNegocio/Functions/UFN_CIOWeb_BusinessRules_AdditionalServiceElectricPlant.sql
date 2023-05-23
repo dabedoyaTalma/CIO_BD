@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServiceElectricPlant]    Script Date: 17/05/2023 8:27:40 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServiceElectricPlant]    Script Date: 18/05/2023 13:58:13 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -36,6 +36,8 @@ GO
 --	2023-05-10	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: AMERICAN AIRLINES - Facturar a: AMERICAN AIRLINES
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
 --	2023-05-11	Diomer Bedoya	   : Se incluye RN TALMA-SAI JETAIR  Compañía: JETAIR - Facturar a: SAI
+--	2023-05-18	Diomer Bedoya	   : Se incluye RN TALMA-SAI KLM  Compañía: KLM - Facturar a: SAI
+--	2023-05-18	Diomer Bedoya	   : Se incluye RN TALMA-SAI AIR TRANSAT   Compañía: AIR TRANSAT  - Facturar a: SAI
 
 -- =========================================================================================================================================================================
 --SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_AdditionalServiceElectricPlant] (20565,11,13,'E190','115VAC',9,9,null,48,'2019-09-01')
@@ -105,6 +107,24 @@ BEGIN
 
 	IF (SELECT SUM(TiempoTotal) FROM @ServiceDetail) = 0 AND @CompanyId NOT IN (9, 72) RETURN --SE TIENE ESTA LINEA PARA OPTIMIZAR EL RENDIMIENTO CON COPA / WINGO NO SE PUEDE POR EL CALCULO DEL TIEMPO DENDIENTE EN EL CASO DE LAS PERNOCTAS
 
+	------------------------------------------------------------------------------------------------------------
+	--**********************************************************************************************************
+	------------------------------------------------------------------------------------------------------------
+	--AIR TRANSAT  / SAI
+	IF (@CompanyId=130 AND @BillingToCompany=87) 
+	BEGIN
+		INSERT @T_Result SELECT StartDate, EndDate, Time, AdditionalService, AdditionalStartTime, AdditionalEndTime, AdditionalTime, AdditionalQuanty, AdditionalServiceName, FractionName, TimeLeftover, NULL CostCenter FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 90, 15.0, NULL,NULL)
+		RETURN
+	END
+	------------------------------------------------------------------------------------------------------------
+	--**********************************************************************************************************
+	------------------------------------------------------------------------------------------------------------
+	--KLM / SAI
+	IF (@CompanyId=59 AND @BillingToCompany=87) 
+	BEGIN
+		INSERT @T_Result SELECT StartDate, EndDate, Time, AdditionalService, AdditionalStartTime, AdditionalEndTime, AdditionalTime, AdditionalQuanty, AdditionalServiceName, FractionName, TimeLeftover, NULL CostCenter FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_CalculateSummedTime](@ServiceDetail, 0, 60.0, NULL,NULL)
+		RETURN
+	END
 	------------------------------------------------------------------------------------------------------------
 	--**********************************************************************************************************
 	------------------------------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation]    Script Date: 12/05/2023 10:36:31 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation]    Script Date: 19/05/2023 9:45:18 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,6 +12,14 @@ GO
 --	2022-04-04	Sebastián Jaramillo: Nueva RN Ultra Air
 --	2022-09-28	Sebastián Jaramillo: Se adicionan RN Arajet
 --	2023-02-13	Sebastián Jaramillo: Se configura nuevo contrato de Avianca 2023 "TAKE OFF 20230201" y Regional Express se integra como un "facturar a" más de Avianca
+--	2023-05-09	Diomer Bedoya	   : Se incluye RN TALMA-SAI SPIRIT  Compañía: SPIRIT - Facturar a: SAI
+--	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
+--	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
+--	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI JETAIR  Compañía: JETAIR - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI LATAM  Compañía: LATAM - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI KLM  Compañía: KLM - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI AIR TRANSAT  Compañía: AIR TRANSAT - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI AIR CENTURY  Compañía: AIR CENTURY - Facturar a: SAI
 -- =====================================================================================================================================================================
 ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation](
 	@AirportId INT,
@@ -26,6 +34,90 @@ ALTER FUNCTION [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_TotalCancellation](
 RETURNS @T_RESULTADO TABLE(CollectServiceType BIT, ConsiderationPercentaje NVARCHAR(5), Consideration NVARCHAR(80))
 AS
 BEGIN
+
+	-- AIR CENTURY / SAI
+	IF (@CompanyId=296 AND @BillingToId=87) 
+	BEGIN
+		IF (@DateService >= '2023-05-09')
+		BEGIN
+			DECLARE @WeatherCondition BIT = [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_WeatherConditionsCancelation](@ServiceHeaderId)
+			
+			IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-1440 AND @WeatherCondition = 1) --24 HORAS ANTES DEBEN AVISAR COMO MÁXIMO Y EVENTOS DE FUERZA MAYOR
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '30%', NULL
+				RETURN
+			END 
+			ELSE IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-1440)
+			BEGIN
+				INSERT @T_RESULTADO SELECT 1, '40%', NULL
+				RETURN
+			END 
+			ELSE
+			BEGIN
+				INSERT @T_RESULTADO SELECT 0, NULL, NULL
+				RETURN
+			END
+		END
+	END
+
+	--AIR TRANSAT / SAI
+	IF (@CompanyId=130 AND @BillingToId=87) 
+	BEGIN
+		
+		IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-720) --12 HORAS ANTES DEBEN AVISAR COMO MÁXIMO
+		BEGIN
+			INSERT @T_RESULTADO SELECT 1, '50%', NULL
+			RETURN
+		END 
+		ELSE
+		BEGIN
+			INSERT @T_RESULTADO SELECT 0, NULL, NULL
+			RETURN
+		END
+		
+	END
+
+	--KLM / SAI
+	IF (@CompanyId=59 AND @BillingToId=87) 
+	BEGIN
+		
+		IF (SELECT  COUNT(DS.DetalleServicioId)
+				FROM	CIOServicios.DetalleServicio DS
+				WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+		BEGIN
+			INSERT @T_RESULTADO SELECT 1, '65%', NULL
+			RETURN
+		END
+
+		IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-480) --8 HORAS ANTES DEBEN AVISAR COMO MÁXIMO
+		BEGIN
+			INSERT @T_RESULTADO SELECT 1, '25%', NULL
+			RETURN
+		END 
+		ELSE
+		BEGIN
+			INSERT @T_RESULTADO SELECT 0, NULL, NULL
+			RETURN
+		END
+		
+	END
+
+	--LATAM / SAI
+	IF (@CompanyId=44 AND @BillingToId=87) 
+	BEGIN
+		
+		IF (DATEDIFF(MINUTE,@ItineraryDate,@CancellationDate)>-720) --12 HORAS ANTES DEBEN AVISAR COMO MÁXIMO
+		BEGIN
+			INSERT @T_RESULTADO SELECT 1, '50%', NULL
+			RETURN
+		END 
+		ELSE
+		BEGIN
+			INSERT @T_RESULTADO SELECT 0, NULL, NULL
+			RETURN
+		END
+		
+	END
 
 	--JETAIR / SAI
 	IF (@CompanyId=295 AND @BillingToId=87) 

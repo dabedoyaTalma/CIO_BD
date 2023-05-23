@@ -1,4 +1,4 @@
-/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_ServiceTypeV2]    Script Date: 15/05/2023 10:11:52 ******/
+/****** Object:  UserDefinedFunction [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_ServiceTypeV2]    Script Date: 19/05/2023 8:37:57 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,6 +17,9 @@ GO
 --	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI AMERICAN AIRLINES  Compañía: AMERICAN AIRLINES - Facturar a: SAI
 --	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI AEROMÉXICO  Compañía: AEROMÉXICO - Facturar a: SAI
 --	2023-05-15	Diomer Bedoya	   : Se incluye RN TALMA-SAI JETAIR  Compañía: JETAIR - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI LATAM  Compañía: LATAM - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI KLM  Compañía: KLM - Facturar a: SAI
+--	2023-05-19	Diomer Bedoya	   : Se incluye RN TALMA-SAI AIR CENTURY  Compañía: AIR CENTURY - Facturar a: SAI
 
 -- ===================================================================================================================================================================================		
 --	SELECT * FROM [CIOReglaNegocio].[UFN_CIOWeb_BusinessRules_Additional_CentralizedOfficeService](1333595, 1, 1, 1, 55, '2021-02-07', '2021-02-07 18:27', '2021-02-07 19:22')
@@ -139,6 +142,43 @@ BEGIN
 	-- =====================
 	IF (@ServiceType = 5)
 	BEGIN
+
+		IF (@CompanyId=296 AND @BillingToCompany=87) --AIR CENTURY / SAI                        
+		BEGIN
+		
+			IF	(	SELECT  COUNT(DS.DetalleServicioId)
+					FROM	CIOServicios.DetalleServicio DS
+					WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+				INSERT @T_RESULTADO SELECT 1, 1, '100%', NULL, NULL
+			ELSE
+				INSERT @T_RESULTADO SELECT 1, 1, '50%', NULL, NULL
+			
+			RETURN
+		END
+
+		IF (@CompanyId=59 AND @BillingToCompany=87) --KLM / SAI                        
+		BEGIN
+		
+			IF	(	SELECT  COUNT(DS.DetalleServicioId)
+					FROM	CIOServicios.DetalleServicio DS
+					WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+				INSERT @T_RESULTADO SELECT 1, 1, '50%', NULL, NULL
+			
+			RETURN
+		END
+
+		IF (@CompanyId=44 AND @BillingToCompany=87) --LATAM / SAI                        
+		BEGIN
+		
+			IF	(	SELECT  COUNT(DS.DetalleServicioId)
+					FROM	CIOServicios.DetalleServicio DS
+					WHERE	DS.TipoActividadId IN (7,8,43,41) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga) - (Finaliza Desabordaje) - (Llamada a Bordo)*/
+				INSERT @T_RESULTADO SELECT 1, 1, '100%', NULL, NULL
+			ELSE
+				INSERT @T_RESULTADO SELECT 1, 1, '30%', NULL, NULL
+			
+			RETURN
+		END
 
 		IF (@CompanyId=295 AND @BillingToCompany=87)--JETAIR / SAI                          
 		BEGIN
@@ -313,6 +353,51 @@ BEGIN
 	-- ========================================
 	IF (@ServiceType = 6)
 	BEGIN
+
+		IF (@CompanyId=296 AND @BillingToCompany=87) --AIR CENTURY / SAI                          
+		BEGIN
+			IF (@DateService >= '2023-05-09')
+			BEGIN
+				IF	(	SELECT  COUNT(DS.DetalleServicioId)
+						FROM	CIOServicios.DetalleServicio DS
+						WHERE	DS.TipoActividadId IN (7,8) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga)*/
+					INSERT @T_RESULTADO SELECT 1, 1, '75%', NULL, NULL
+				ELSE
+					INSERT @T_RESULTADO SELECT 0, 1, NULL, NULL, NULL
+			END
+			--En caso de que se tengan más actividades registrarlo como un nuevo transito.
+			RETURN
+		END
+
+		IF (@CompanyId=59 AND @BillingToCompany=87) --KLM / SAI                          
+		BEGIN
+			IF (@DateService >= '2023-05-09')
+			BEGIN
+				IF	(	SELECT  COUNT(DS.DetalleServicioId)
+						FROM	CIOServicios.DetalleServicio DS
+						WHERE	DS.TipoActividadId IN (7,8) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga)*/
+					INSERT @T_RESULTADO SELECT 1, 1, '50%', NULL, NULL
+				ELSE
+					INSERT @T_RESULTADO SELECT 0, 1, NULL, NULL, NULL
+			END
+			--En caso de que se tengan más actividades registrarlo como un nuevo transito.
+			RETURN
+		END
+
+		IF (@CompanyId=44 AND @BillingToCompany=87) --LATAM / SAI                          
+		BEGIN
+			IF (@DateService >= '2023-05-09')
+			BEGIN
+				IF	(	SELECT  COUNT(DS.DetalleServicioId)
+						FROM	CIOServicios.DetalleServicio DS
+						WHERE	DS.TipoActividadId IN (7,8) AND DS.Activo = 1 AND DS.EncabezadoServicioId = @ServiceHeaderId  ) >= 1  /*(Descargue de Equipaje / Carga) - (Cargue de Equipaje / Carga)*/
+					INSERT @T_RESULTADO SELECT 1, 1, '30%', NULL, NULL
+				ELSE
+					INSERT @T_RESULTADO SELECT 0, 1, NULL, NULL, NULL
+			END
+			--En caso de que se tengan más actividades registrarlo como un nuevo transito.
+			RETURN
+		END
 
 		IF (@CompanyId=295 AND @BillingToCompany=87)        --JETAIR / SAI         
 		BEGIN
